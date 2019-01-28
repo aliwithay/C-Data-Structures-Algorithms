@@ -11,13 +11,14 @@ int main(int argc, char *argv[])
     if (argc == 1)
     {
         cerr << "No path provided.\n";
+        return 1;
     }
     for (int i = 1; i < argc; i++)
     {
         int result = lstat(argv[i], &sb);
         if (result != 0)
         {
-            cout << "Error on path " << argv[i] << ".\n";
+            cerr << "Error on path " << argv[i] << ".\n";
             return 1;
         }
         switch (sb.st_mode & S_IFMT)
@@ -32,7 +33,7 @@ int main(int argc, char *argv[])
         auto timevals = localtime(&sb.st_mtime);
         char buf[32];
         strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S", timevals);
-        cout << (sb.st_mode & S_IRWXU) << " " << sb.st_size << " " << buf << " " << argv[i] << "\n";
+        cout << (sb.st_mode & S_IFDIR) << " " << (sb.st_mode & S_IRWXU) << " " << (sb.st_mode & S_IRWXG) << " " << (sb.st_mode & S_IRWXO) << " " << sb.st_size << " " << buf << " " << argv[i] << "\n";
     }
-    return 0
+    return 0;
 }
