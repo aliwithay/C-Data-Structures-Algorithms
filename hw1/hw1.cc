@@ -29,11 +29,21 @@ int main(int argc, char *argv[])
         case S_IFSOCK:
             cout << argv[i] << " is a socket.\n";
             continue;
+	case S_IFREG:
+	    cout << "-";
+	    break;
+	case S_IFDIR:
+	    cout << "d";
+	    break;
+	case S_IFLNK:
+	    cout << "l";
+	    break;
         }
         auto timevals = localtime(&sb.st_mtime);
         char buf[32];
         strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S", timevals);
-        cout << (sb.st_mode & S_IFDIR) << " " << (sb.st_mode & S_IRWXU) << " " << (sb.st_mode & S_IRWXG) << " " << (sb.st_mode & S_IRWXO) << " " << sb.st_size << " " << buf << " " << argv[i] << "\n";
+	int permissions = (sb.st_mode & S_IRWXG);
+        cout << permissions << " " << sb.st_size << " " << buf << " " << argv[i] << "\n";
     }
     return 0;
 }
