@@ -10,7 +10,7 @@ int main(int argc, char *argv[])
     struct stat sb;
     if (argc == 1)
     {
-        cerr << "No path provided.\n";
+        cerr << "Usage: hw1 [FILE]...\n" << "List information about the FILEs. \n";
         return 1;
     }
     for (int i = 1; i < argc; i++)
@@ -24,10 +24,10 @@ int main(int argc, char *argv[])
         switch (sb.st_mode & S_IFMT)
         {
         case S_IFIFO:
-            cout << argv[i] << " is a FIFO.\n";
+            cerr << argv[i] << " is a FIFO.\n";
             continue;
         case S_IFSOCK:
-            cout << argv[i] << " is a socket.\n";
+            cerr << argv[i] << " is a socket.\n";
             continue;
         case S_IFREG:
             cout << "-";
