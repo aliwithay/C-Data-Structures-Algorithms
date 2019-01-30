@@ -8,26 +8,32 @@ using namespace std;
 int main(int argc, char *argv[])
 {
     struct stat sb;
+    //Produce usage error if no path provided.
     if (argc == 1)
     {
-        cerr << "Usage: hw1 [FILE]...\n" << "List information about the FILEs. \n";
+        cerr << "Usage: " << argv[0] << " [FILE]...\n" << "List information about the FILEs. \n";
         return 1;
     }
+    //Loop through all paths provided.
     for (int i = 1; i < argc; i++)
     {
+        //run lstat and store information in sb.
         int result = lstat(argv[i], &sb);
+        //check if lstat returned error.
         if (result != 0)
         {
-            cerr << "Error on path " << argv[i] << ".\n";
+            cerr << argv[0] << " encounterd an error on path " << argv[i] << ".\n";
             return 1;
         }
+        //Determine file type and generate error for undefined files.
+        //Determine first bit of permissions.
         switch (sb.st_mode & S_IFMT)
         {
         case S_IFIFO:
-            cerr << argv[i] << " is a FIFO.\n";
+            cerr << argv[i] << ": Cannot handle FIFO type files.\n";
             continue;
         case S_IFSOCK:
-            cerr << argv[i] << " is a socket.\n";
+            cerr << argv[i] << ": Cannot handle Socket type files.\n";
             continue;
         case S_IFREG:
             cout << "-";
@@ -39,6 +45,7 @@ int main(int argc, char *argv[])
             cout << "l";
             break;
         }
+        //Determine USER permissions.
         switch ((sb.st_mode & S_IRWXU) >> 6)
         {
         case 7:
@@ -66,6 +73,7 @@ int main(int argc, char *argv[])
             cout << "---";
             break;
         }
+        //Determine GROUP permissions.
         switch ((sb.st_mode & S_IRWXG) >> 3)
         {
         case 7:
@@ -93,6 +101,7 @@ int main(int argc, char *argv[])
             cout << "---";
             break;
         }
+        //Determine OTHER permissions.
         switch (sb.st_mode & S_IRWXO)
         {
         case 7:
@@ -120,9 +129,12 @@ int main(int argc, char *argv[])
             cout << "---";
             break;
         }
+        //Get time in epoch seconds and convert to readable time.
         auto timevals = localtime(&sb.st_mtime);
         char buf[32];
+        //Format time in required form and store in buf.
         strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S", timevals);
+        //Print final output string with size, time and path.
         cout << " " << sb.st_size << " " << buf << " " << argv[i] << "\n";
     }
     return 0;
