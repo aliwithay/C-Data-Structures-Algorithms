@@ -10,7 +10,8 @@ int main(int argc, char *argv[])
     struct stat sb;
     if (argc == 1)
     {
-        cerr << "Usage: hw1 [FILE]...\n" << "List information about the FILEs. \n";
+        cerr << "Usage: hw1 [FILE]...\n"
+             << "List information about the FILEs. \n";
         return 1;
     }
     for (int i = 1; i < argc; i++)
@@ -19,7 +20,7 @@ int main(int argc, char *argv[])
         if (result != 0)
         {
             cerr << "Error on path " << argv[i] << ".\n";
-            return 1;
+            continue;
         }
         switch (sb.st_mode & S_IFMT)
         {
