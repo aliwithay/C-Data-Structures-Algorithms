@@ -46,22 +46,23 @@ int main(int argc, char *argv[])
             break;
         }
         //Determine USER permissions.
+        char permissions;
         switch ((sb.st_mode & S_IRWXU) >> 6)
         {
         case 7:
-            cout << "rwx";
+            permissions << "rwx";
             break;
         case 6:
-            cout << "rw-";
+            permissions << "rw-";
             break;
         case 5:
-            cout << "r-x";
+            permissions << "r-x";
             break;
         case 4:
-            cout << "r--";
+            permissions << "r--";
             break;
         case 3:
-            cout << "-wx";
+            permissions << "-wx";
             break;
         case 2:
             cout << "-w-";

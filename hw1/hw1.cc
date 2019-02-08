@@ -7,6 +7,7 @@ using namespace std;
 int main(int argc, char *argv[])
 {
     struct stat sb;
+    auto permissions = "";
     //Produce usage error if no path provided.
     if (argc == 1)
     {
@@ -36,7 +37,7 @@ int main(int argc, char *argv[])
             cerr << argv[i] << ": Cannot handle Socket type files.\n";
             continue;
         case S_IFREG:
-            cout << "-";
+            //permissions = permissions + "-";
             break;
         case S_IFDIR:
             cout << "d";
