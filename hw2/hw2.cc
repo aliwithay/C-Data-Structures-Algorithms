@@ -1,9 +1,154 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <time.h>
-#include <stdlib.h>
 #include <iostream>
+#include <fstream>
 using namespace std;
+void get_file_type(struct stat sb, string &permissions)
+{
+    switch (sb.st_mode & S_IFMT)
+    {
+    case S_IFIFO:
+        permissions += "f";
+        break;
+    case S_IFSOCK:
+        permissions += "s";
+        break;
+    case S_IFREG:
+        permissions += "-";
+        break;
+    case S_IFDIR:
+        permissions += "d";
+        break;
+    case S_IFLNK:
+        permissions += "l";
+        break;
+    }
+}
+void get_file_permissions(struct stat sb, string &permissions)
+{
+    switch ((sb.st_mode & S_IRWXU) >> 6)
+    {
+    case 7:
+        permissions += "rwx";
+        break;
+    case 6:
+        permissions += "rw-";
+        break;
+    case 5:
+        permissions += "r-x";
+        break;
+    case 4:
+        permissions += "r--";
+        break;
+    case 3:
+        permissions += "-wx";
+        break;
+    case 2:
+        permissions += "-w-";
+        break;
+    case 1:
+        permissions += "--x";
+        break;
+    case 0:
+        permissions += "---";
+        break;
+    }
+    //Determine GROUP permissions.
+    switch ((sb.st_mode & S_IRWXG) >> 3)
+    {
+    case 7:
+        permissions += "rwx";
+        break;
+    case 6:
+        permissions += "rw-";
+        break;
+    case 5:
+        permissions += "r-x";
+        break;
+    case 4:
+        permissions += "r--";
+        break;
+    case 3:
+        permissions += "-wx";
+        break;
+    case 2:
+        permissions += "-w-";
+        break;
+    case 1:
+        permissions += "--x";
+        break;
+    default:
+        permissions += "---";
+        break;
+    }
+    //Determine OTHER permissions.
+    switch (sb.st_mode & S_IRWXO)
+    {
+    case 7:
+        permissions += "rwx";
+        break;
+    case 6:
+        permissions += "rw-";
+        break;
+    case 5:
+        permissions += "r-x";
+        break;
+    case 4:
+        permissions += "r--";
+        break;
+    case 3:
+        permissions += "-wx";
+        break;
+    case 2:
+        permissions += "-w-";
+        break;
+    case 1:
+        permissions += "--x";
+        break;
+    default:
+        permissions += "---";
+        break;
+    }
+}
+char *get_modified_time(struct stat sb)
+{
+    //Get time in epoch seconds and convert to readable time.
+    auto timevals = localtime(&sb.st_mtime);
+    static char buf[32];
+    //Format time in required form and store in buf.
+    strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S", timevals);
+    return buf;
+}
+char *get_access_time(struct stat sb)
+{
+    //Get time in epoch seconds and convert to readable time.
+    auto timevals = localtime(&sb.st_atime);
+    static char buf[32];
+    //Format time in required form and store in buf.
+    strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S", timevals);
+    return buf;
+}
+char *get_change_time(struct stat sb)
+{
+    //Get time in epoch seconds and convert to readable time.
+    auto timevals = localtime(&sb.st_ctime);
+    static char buf[32];
+    //Format time in required form and store in buf.
+    strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S", timevals);
+    return buf;
+}
+void get_size(struct stat sb, int &size)
+{
+    size = sb.st_size;
+}
+void get_media_type(char path)
+{
+    ifstream fRef;
+    ifstream fCheck;
+    fRef.open("~cs253/pub/media-types");
+    fCheck.open(path);
+}
 int main(int argc, char *argv[])
 {
     struct stat sb;
@@ -27,116 +172,18 @@ int main(int argc, char *argv[])
         }
         //Determine file type and generate error for undefined files.
         //Determine first bit of permissions.
-        switch (sb.st_mode & S_IFMT)
-        {
-        case S_IFIFO:
-            cerr << argv[i] << ": Cannot handle FIFO type files.\n";
-            continue;
-        case S_IFSOCK:
-            cerr << argv[i] << ": Cannot handle Socket type files.\n";
-            continue;
-        case S_IFREG:
-            cout << "-";
-            break;
-        case S_IFDIR:
-            cout << "d";
-            break;
-        case S_IFLNK:
-            cout << "l";
-            break;
-        }
+        string type;
+        get_file_type(sb, type);
         //Determine USER permissions.
-        char permissions;
-        switch ((sb.st_mode & S_IRWXU) >> 6)
-        {
-        case 7:
-            permissions << "rwx";
-            break;
-        case 6:
-            permissions << "rw-";
-            break;
-        case 5:
-            permissions << "r-x";
-            break;
-        case 4:
-            permissions << "r--";
-            break;
-        case 3:
-            permissions << "-wx";
-            break;
-        case 2:
-            cout << "-w-";
-            break;
-        case 1:
-            cout << "--x";
-            break;
-        case 0:
-            cout << "---";
-            break;
-        }
-        //Determine GROUP permissions.
-        switch ((sb.st_mode & S_IRWXG) >> 3)
-        {
-        case 7:
-            cout << "rwx";
-            break;
-        case 6:
-            cout << "rw-";
-            break;
-        case 5:
-            cout << "r-x";
-            break;
-        case 4:
-            cout << "r--";
-            break;
-        case 3:
-            cout << "-wx";
-            break;
-        case 2:
-            cout << "-w-";
-            break;
-        case 1:
-            cout << "--x";
-            break;
-        default:
-            cout << "---";
-            break;
-        }
-        //Determine OTHER permissions.
-        switch (sb.st_mode & S_IRWXO)
-        {
-        case 7:
-            cout << "rwx";
-            break;
-        case 6:
-            cout << "rw-";
-            break;
-        case 5:
-            cout << "r-x";
-            break;
-        case 4:
-            cout << "r--";
-            break;
-        case 3:
-            cout << "-wx";
-            break;
-        case 2:
-            cout << "-w-";
-            break;
-        case 1:
-            cout << "--x";
-            break;
-        default:
-            cout << "---";
-            break;
-        }
-        //Get time in epoch seconds and convert to readable time.
-        auto timevals = localtime(&sb.st_mtime);
-        char buf[32];
-        //Format time in required form and store in buf.
-        strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S", timevals);
+        string permissions;
+        get_file_permissions(sb, permissions);
+        //Get the time for last modification.
+        auto time = get_modified_time(sb);
+        //Determine file size.
+        int size;
+        get_size(sb, size);
         //Print final output string with size, time and path.
-        cout << " " << sb.st_size << " " << buf << " " << argv[i] << "\n";
+        cout << type << permissions << " " << size << " " << time << " " << argv[i] << "\n";
     }
     return 0;
 }

@@ -18,7 +18,7 @@ export opts=-D_FORTIFY_SOURCE=2 -fno-diagnostics-show-option		\
 CXXFLAGS=-Wall $$opts
 # Use CXXFLAGS; not CPPFLAGS.  CXX is for C++, CPP is for the C Pre-Processor.
 
-assignment=hw1
+assignment=hw2
 
 $(assignment): $(assignment).o
 	g++ $(CXXFLAGS) -o $@ $^
