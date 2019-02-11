@@ -145,11 +145,25 @@ void get_size(struct stat sb, int &size)
 }
 void read_media_type_ref()
 {
-    ifstream fRef;
-    fRef.open("~cs253/pub/media-types");
+    /*
+    ifstream fRef("~/CS253/hw2/media-types");
+    if(!fRef.is_open())
+    {
+	cout << "Cannot open reference file!\n";
+	return;
+    }
     string str;
-    getline(fRef, str);
-    cout << str;
+    while (getline(fRef, str))
+    {
+	for (size_t i = 0; i < str.size(); i++)
+	{
+	    cout << str[i];
+	}
+        cout << "\n";
+    }
+    return;
+    //getline(fRef, str);
+    */
 }
 int main()
 {
@@ -190,6 +204,7 @@ int main()
         cout << type << permissions << " " << size << " " << time << " " << argv[i] << "\n";
     }
     */
+    cout << "run\n";
     read_media_type_ref();
     return 0;
 }
