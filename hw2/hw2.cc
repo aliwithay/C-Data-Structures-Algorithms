@@ -3,6 +3,7 @@
 #include <time.h>
 #include <iostream>
 #include <fstream>
+#include <map>
 using namespace std;
 void get_file_type(struct stat sb, string &permissions)
 {
@@ -142,15 +143,18 @@ void get_size(struct stat sb, int &size)
 {
     size = sb.st_size;
 }
-void get_media_type(char path)
+void read_media_type_ref()
 {
     ifstream fRef;
-    ifstream fCheck;
     fRef.open("~cs253/pub/media-types");
-    fCheck.open(path);
+    string str;
+    getline(fRef, str);
+    cout << str;
 }
-int main(int argc, char *argv[])
+int main()
 {
+    /*
+    int argc, char *argv[]
     struct stat sb;
     //Produce usage error if no path provided.
     if (argc == 1)
@@ -185,5 +189,7 @@ int main(int argc, char *argv[])
         //Print final output string with size, time and path.
         cout << type << permissions << " " << size << " " << time << " " << argv[i] << "\n";
     }
+    */
+    read_media_type_ref();
     return 0;
 }
