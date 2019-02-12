@@ -4,9 +4,12 @@
 #include <iostream>
 #include <fstream>
 #include <map>
+#include <pwd.h>
+#include <grp.h>
 using namespace std;
-void get_file_type(struct stat sb, string &permissions)
+string get_file_permissions(struct stat sb)
 {
+    string permissions;
     switch (sb.st_mode & S_IFMT)
     {
     case S_IFIFO:
@@ -25,9 +28,6 @@ void get_file_type(struct stat sb, string &permissions)
         permissions += "l";
         break;
     }
-}
-void get_file_permissions(struct stat sb, string &permissions)
-{
     switch ((sb.st_mode & S_IRWXU) >> 6)
     {
     case 7:
@@ -111,6 +111,7 @@ void get_file_permissions(struct stat sb, string &permissions)
         permissions += "---";
         break;
     }
+    return permissions;
 }
 char *get_modified_time(struct stat sb)
 {
@@ -132,6 +133,7 @@ char *get_access_time(struct stat sb)
 }
 char *get_change_time(struct stat sb)
 {
+    //Returns char * containing the formatted time of last status change.
     //Get time in epoch seconds and convert to readable time.
     auto timevals = localtime(&sb.st_ctime);
     static char buf[32];
@@ -139,72 +141,145 @@ char *get_change_time(struct stat sb)
     strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S", timevals);
     return buf;
 }
-void get_size(struct stat sb, int &size)
+int get_size(struct stat sb)
 {
-    size = sb.st_size;
+    return sb.st_size;
+}
+int get_user_id(struct stat sb)
+{
+    return sb.st_uid;
+}
+char *get_user_name(struct stat sb)
+{
+    struct passwd *pwd;
+    pwd = getpwuid(sb.st_uid);
+    return pwd->pw_name;
+}
+int get_group_id(struct stat sb)
+{
+    return sb.st_gid;
+}
+char *get_group_name(struct stat sb)
+{
+    struct group *grp;
+    grp = getgrgid(sb.st_gid);
+    return grp->gr_name;
 }
 void read_media_type_ref()
 {
-    /*
-    ifstream fRef("~/CS253/hw2/media-types");
-    if(!fRef.is_open())
+    ifstream refFile("~cs253/pub/media-types");
+    if (!refFile)
     {
-	cout << "Cannot open reference file!\n";
-	return;
-    }
-    string str;
-    while (getline(fRef, str))
-    {
-	for (size_t i = 0; i < str.size(); i++)
-	{
-	    cout << str[i];
-	}
-        cout << "\n";
+        cout << "Cannot open media type reference file.";
     }
     return;
-    //getline(fRef, str);
-    */
 }
-int main()
+string get_media_type()
 {
-    /*
-    int argc, char *argv[]
-    struct stat sb;
+    read_media_type_ref();
+    return "";
+}
+void format_output(string format, char *path, struct stat sb)
+{
+    for (unsigned int k = 0; k < format.size(); k++)
+    {
+        char c = format[k];
+        if (c == '%')
+        {
+            switch (format[++k])
+            {
+            case 'n':
+                cout << path;
+                break;
+            case 'p':
+                cout << get_file_permissions(sb);
+                break;
+            case 'u':
+                cout << get_user_id(sb);
+                break;
+            case 'U':
+                cout << get_user_name(sb);
+                break;
+            case 'g':
+                cout << get_group_id(sb);
+                break;
+            case 'G':
+                cout << get_group_name(sb);
+                break;
+            case 's':
+                cout << get_size(sb);
+                break;
+            case 'a':
+                cout << get_access_time(sb);
+                break;
+            case 'm':
+                cout << get_modified_time(sb);
+                break;
+            case 'c':
+                cout << get_change_time(sb);
+                break;
+            case 'M':
+                cout << get_media_type();
+                break;
+            default:
+                continue;
+            }
+        }
+        else
+        {
+            cout << c;
+        }
+    }
+    cout << "\n";
+}
+int main(int argc, char *argv[])
+{
     //Produce usage error if no path provided.
     if (argc == 1)
     {
-        cerr << "Usage: " << argv[0] << " [FILE]...\n"
-             << "List information about the FILEs. \n";
+        cerr << "Usage: " << argv[0] << " [FORMAT][FILE]...\n"
+             << "List information about the FILEs.\n"
+             << "Format optional. (DEFAULT: '%n')\n";
         return 1;
     }
-    //Loop through all paths provided.
-    for (int i = 1; i < argc; i++)
+    string format = argv[1];
+    if (argc == 2 && format.find('%') != string::npos)
     {
-        //run lstat and store information in sb.
-        int result = lstat(argv[i], &sb);
-        //check if lstat returned error.
-        if (result != 0)
-        {
-            cerr << argv[0] << " encounterd an error on path " << argv[i] << ".\n";
-            continue;
-        }
-        //Determine file type and generate error for undefined files.
-        //Determine first bit of permissions.
-        string type;
-        get_file_type(sb, type);
-        //Determine USER permissions.
-        string permissions;
-        get_file_permissions(sb, permissions);
-        //Get the time for last modification.
-        auto time = get_modified_time(sb);
-        //Determine file size.
-        int size;
-        get_size(sb, size);
-        //Print final output string with size, time and path.
-        cout << type << permissions << " " << size << " " << time << " " << argv[i] << "\n";
+        cerr << "Usage: " << argv[0] << " [FORMAT][FILE]...\n"
+             << "List information about the FILEs.\n"
+             << "Format optional. (DEFAULT: '%n')\n";
+        return 1;
     }
-    */
-    cout << "run\n";
-    read_media_type_ref();
+    if (format.find('%') != string::npos)
+    {
+        //Do stuff
+        struct stat sb;
+        for (int i = 2; i < argc; i++)
+        {
+            char *path = argv[i];
+            int result = lstat(path, &sb);
+            if (result != 0)
+            {
+                cerr << argv[0] << " encounterd an error on path " << argv[i] << ".\n";
+                continue;
+            }
+            format_output(format, path, sb);
+        }
+    }
+    else
+    {
+        struct stat sb;
+        for (int i = 1; i < argc; i++)
+        {
+            char *path = argv[i];
+            int result = lstat(path, &sb);
+            if (result != 0)
+            {
+                cerr << argv[0] << " encounterd an error on path " << argv[i] << ".\n";
+                continue;
+            }
+            cout << path << "\n";
+        }
+    }
     return 0;
 }
