@@ -187,10 +187,24 @@ string get_media_type(string path, struct stat sb)
             cerr << "Cannot open " << path << " file. " << strerror(saveErr);
             return "";
         }
+        string str;
         string identifier;
-        getline(in, identifier);
-	cout << "\n [Troubleshoot] Identifier: " << identifier << "\n";
-        const string filePath = "/s/bach/a/class/cs253/pub/media-types";
+        getline(in, str);
+        for (unsigned int k = 0; k < str.length(); k++)
+        {
+            char c = str[k];
+            if (c == '%')
+            {
+                char a = (stoi(str.substr(++k, 2), nullptr, 16));
+                cout << a;
+            }
+            else
+            {
+                identifier.push_back(c);
+            }
+        }
+        cout << "\n";
+        const string filePath = "/mnt/c/users/alyam/Documents/media-types";
         ifstream ref(filePath);
         if (!ref)
         {
@@ -202,12 +216,11 @@ string get_media_type(string path, struct stat sb)
         int flag = 0;
         while (ref >> s)
         {
-	    cout << "[Troubleshoot] Comparator: " << s << "\n";
             if (flag == 1)
             {
                 return s;
             }
-            if (s.find(identifier) != string::npos)
+            if (identifier == s)
             {
                 flag = 1;
             }
@@ -299,8 +312,7 @@ int main(int argc, char *argv[])
         int result = lstat(path, &sb);
         if (result != 0)
         {
-            auto saveErr = errno;
-	    cerr << argv[0] << " encounterd an error on path " << argv[i] << ". " << strerror(saveErr) << ".\n";
+            cerr << argv[0] << " encounterd an error on path " << argv[i] << ".\n";
             continue;
         }
         format_output(format, path, sb);
