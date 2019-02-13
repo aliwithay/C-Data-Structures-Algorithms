@@ -6,6 +6,7 @@
 #include <map>
 #include <pwd.h>
 #include <grp.h>
+#include <cstring>
 using namespace std;
 string get_file_permissions(struct stat sb)
 {
@@ -165,18 +166,33 @@ char *get_group_name(struct stat sb)
     grp = getgrgid(sb.st_gid);
     return grp->gr_name;
 }
-void read_media_type_ref()
+string get_media_type(struct stat sb)
 {
-    ifstream refFile("~cs253/pub/media-types");
-    if (refFile.is_open())
+    if ((sb.st_mode & S_IFDIR))
     {
-        cout << "Cannot open media type reference file.";
+        return "inode/directory";
     }
-    return;
-}
-string get_media_type()
-{
-    read_media_type_ref();
+    if ((sb.st_mode & S_IFLNK))
+    {
+        return "inode/symlink";
+    }
+    if (sb.st_size == 0)
+    {
+        return "inode/empty";
+    }
+    const string filePath = "/mnt/c/users/alyam/Documents/media-types";
+    ifstream in(filePath);
+    if (!in)
+    {
+        const auto saveErr = errno;
+        cerr << "Cannot open media type reference file. " << strerror(saveErr);
+        return "";
+    }
+    string s;
+    //int flag = 0;
+    while (in >> s)
+    {
+    }
     return "";
 }
 void format_output(string format, char *path, struct stat sb)
@@ -219,7 +235,7 @@ void format_output(string format, char *path, struct stat sb)
                 cout << get_change_time(sb);
                 break;
             case 'M':
-                cout << get_media_type();
+                cout << get_media_type(sb);
                 break;
             default:
                 continue;
@@ -250,36 +266,36 @@ int main(int argc, char *argv[])
              << "Format optional. (DEFAULT: '%n')\n";
         return 1;
     }
-    if (format.find('%') != string::npos)
+    //if (format.find('%') != string::npos)
+    //{
+    //Do stuff
+    struct stat sb;
+    for (int i = 2; i < argc; i++)
     {
-        //Do stuff
-        struct stat sb;
-        for (int i = 2; i < argc; i++)
+        char *path = argv[i];
+        int result = lstat(path, &sb);
+        if (result != 0)
         {
-            char *path = argv[i];
-            int result = lstat(path, &sb);
-            if (result != 0)
-            {
-                cerr << argv[0] << " encounterd an error on path " << argv[i] << ".\n";
-                continue;
-            }
-            format_output(format, path, sb);
+            cerr << argv[0] << " encounterd an error on path " << argv[i] << ".\n";
+            continue;
         }
+        format_output(format, path, sb);
     }
+    /*}
     else
     {
-        struct stat sb;
-        for (int i = 1; i < argc; i++)
+    struct stat sb;
+    for (int i = 1; i < argc; i++)
+    {
+        char *path = argv[i];
+        int result = lstat(path, &sb);
+        if (result != 0)
         {
-            char *path = argv[i];
-            int result = lstat(path, &sb);
-            if (result != 0)
-            {
-                cerr << argv[0] << " encounterd an error on path " << argv[i] << ".\n";
-                continue;
-            }
-            cout << path << "\n";
+            cerr << argv[0] << " encounterd an error on path " << argv[i] << ".\n";
+            continue;
         }
+        cout << path << "\n";
     }
+    }*/
     return 0;
 }
