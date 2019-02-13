@@ -168,7 +168,7 @@ char *get_group_name(struct stat sb)
 void read_media_type_ref()
 {
     ifstream refFile("~cs253/pub/media-types");
-    if (!refFile)
+    if (refFile.is_open())
     {
         cout << "Cannot open media type reference file.";
     }
