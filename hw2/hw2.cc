@@ -166,34 +166,55 @@ char *get_group_name(struct stat sb)
     grp = getgrgid(sb.st_gid);
     return grp->gr_name;
 }
-string get_media_type(struct stat sb)
+string get_media_type(string path, struct stat sb)
 {
-    if ((sb.st_mode & S_IFDIR))
-    {
-        return "inode/directory";
-    }
-    if ((sb.st_mode & S_IFLNK))
-    {
-        return "inode/symlink";
-    }
     if (sb.st_size == 0)
     {
         return "inode/empty";
     }
-    const string filePath = "/mnt/c/users/alyam/Documents/media-types";
-    ifstream in(filePath);
-    if (!in)
+    switch (sb.st_mode & S_IFMT)
     {
-        const auto saveErr = errno;
-        cerr << "Cannot open media type reference file. " << strerror(saveErr);
-        return "";
-    }
-    string s;
-    //int flag = 0;
-    while (in >> s)
+    case S_IFDIR:
+        return "inode/directory";
+    case S_IFLNK:
+        return "inode/symlink";
+    case S_IFREG:
     {
+        ifstream in(path);
+        if (!in)
+        {
+            const auto saveErr = errno;
+            cerr << "Cannot open " << path << " file. " << strerror(saveErr);
+            return "";
+        }
+        string identifier;
+        getline(in, identifier);
+        const string filePath = "/mnt/c/users/alyam/Documents/media-types";
+        ifstream ref(filePath);
+        if (!ref)
+        {
+            const auto saveErr = errno;
+            cerr << "Cannot open media type reference file. " << strerror(saveErr);
+            return "";
+        }
+        string s;
+        int flag = 0;
+        while (ref >> s)
+        {
+            if (flag == 1)
+            {
+                return s;
+            }
+            if (identifier == s)
+            {
+                flag = 1;
+            }
+        }
+        return "application/octet-data";
     }
-    return "";
+    default:
+        return "Unknown file type.";
+    }
 }
 void format_output(string format, char *path, struct stat sb)
 {
@@ -235,7 +256,7 @@ void format_output(string format, char *path, struct stat sb)
                 cout << get_change_time(sb);
                 break;
             case 'M':
-                cout << get_media_type(sb);
+                cout << get_media_type(path, sb);
                 break;
             default:
                 continue;
