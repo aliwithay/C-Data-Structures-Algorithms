@@ -187,23 +187,9 @@ string get_media_type(string path, struct stat sb)
             cerr << "Cannot open " << path << " file. " << strerror(saveErr);
             return "";
         }
-        string str;
         string identifier;
-        getline(in, str);
-        for (unsigned int k = 0; k < str.length(); k++)
-        {
-            char c = str[k];
-            if (c == '%')
-            {
-                char a = (stoi(str.substr(++k, 2), nullptr, 16));
-                cout << a;
-            }
-            else
-            {
-                identifier.push_back(c);
-            }
-        }
-        cout << "\n";
+        getline(in, identifier);
+        cout << "[Troubleshoot] Identifier: " << identifier << "\n";
         const string filePath = "/mnt/c/users/alyam/Documents/media-types";
         ifstream ref(filePath);
         if (!ref)
@@ -216,12 +202,45 @@ string get_media_type(string path, struct stat sb)
         int flag = 0;
         while (ref >> s)
         {
+            string comparator;
+            if (s.find('%') != string::npos)
+            {
+                for (unsigned int k = 0; k < s.length(); k++)
+                {
+                    char c = s[k];
+                    char a;
+                    if (c == '%')
+                    {
+                        try
+                        {
+                            a = (stoi(s.substr(++k, 2), nullptr, 16));
+                        }
+                        catch (const std::invalid_argument &ia)
+                        {
+                            comparator.push_back(s[k]);
+                            continue;
+                        }
+                        comparator.push_back(a);
+                        k++;
+                    }
+                    else
+                    {
+                        comparator.push_back(c);
+                    }
+                }
+            }
+            else
+            {
+                comparator = s;
+            }
+            cout << "[Troubleshoot] Comparator: " << comparator << "\n";
             if (flag == 1)
             {
-                return s;
+                return comparator;
             }
-            if (identifier == s)
+            if (identifier.find(comparator) != string::npos)
             {
+                cout << "[Troubleshoot] Match found!\n";
                 flag = 1;
             }
         }
@@ -312,7 +331,8 @@ int main(int argc, char *argv[])
         int result = lstat(path, &sb);
         if (result != 0)
         {
-            cerr << argv[0] << " encounterd an error on path " << argv[i] << ".\n";
+            auto saveErr = errno;
+            cerr << argv[0] << " encounterd an error on path " << argv[i] << " " << strerror(saveErr) << ".\n";
             continue;
         }
         format_output(format, path, sb);
