@@ -189,8 +189,7 @@ string get_media_type(string path, struct stat sb)
         }
         string identifier;
         getline(in, identifier);
-        cout << "[Troubleshoot] Identifier: " << identifier << "\n";
-        const string filePath = "/mnt/c/users/alyam/Documents/media-types";
+        const string filePath = "/s/bach/a/class/cs253/pub/media-types";
         ifstream ref(filePath);
         if (!ref)
         {
@@ -233,14 +232,12 @@ string get_media_type(string path, struct stat sb)
             {
                 comparator = s;
             }
-            cout << "[Troubleshoot] Comparator: " << comparator << "\n";
             if (flag == 1)
             {
                 return comparator;
             }
             if (identifier.find(comparator) != string::npos)
             {
-                cout << "[Troubleshoot] Match found!\n";
                 flag = 1;
             }
         }
