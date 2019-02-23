@@ -1,7 +1,7 @@
+#include <iostream>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <time.h>
-#include <iostream>
 #include <fstream>
 #include <map>
 #include <pwd.h>
@@ -168,10 +168,6 @@ char *get_group_name(struct stat sb)
 }
 string get_media_type(string path, struct stat sb)
 {
-    if (sb.st_size == 0)
-    {
-        return "inode/empty";
-    }
     switch (sb.st_mode & S_IFMT)
     {
     case S_IFDIR:
@@ -180,6 +176,10 @@ string get_media_type(string path, struct stat sb)
         return "inode/symlink";
     case S_IFREG:
     {
+        if (sb.st_size == 0)
+        {
+            return "inode/empty";
+        }
         ifstream in(path);
         if (!in)
         {
@@ -189,8 +189,8 @@ string get_media_type(string path, struct stat sb)
         }
         string identifier;
         getline(in, identifier);
-        const string filePath = "/s/bach/a/class/cs253/pub/media-types";
-        ifstream ref(filePath);
+        const string home = getpwnam("cs253")->pw_dir;
+        ifstream ref(home+"/pub/media-types");
         if (!ref)
         {
             const auto saveErr = errno;
@@ -213,14 +213,14 @@ string get_media_type(string path, struct stat sb)
                         try
                         {
                             a = (stoi(s.substr(++k, 2), nullptr, 16));
+                            comparator.push_back(a);
+                            k++;
                         }
-                        catch (const std::invalid_argument &ia)
+                        catch (const invalid_argument &ia)
                         {
                             comparator.push_back(s[k]);
                             continue;
                         }
-                        comparator.push_back(a);
-                        k++;
                     }
                     else
                     {
@@ -249,6 +249,8 @@ string get_media_type(string path, struct stat sb)
 }
 void format_output(string format, char *path, struct stat sb)
 {
+    int flag = 0;
+    char fchar;
     for (unsigned int k = 0; k < format.size(); k++)
     {
         char c = format[k];
@@ -290,6 +292,8 @@ void format_output(string format, char *path, struct stat sb)
                 cout << get_media_type(path, sb);
                 break;
             default:
+                flag = 1;
+                fchar = format[k];
                 continue;
             }
         }
@@ -299,6 +303,10 @@ void format_output(string format, char *path, struct stat sb)
         }
     }
     cout << "\n";
+    if (flag == 1)
+    {
+        cerr << "Invalid format label: %" << fchar << "\n";
+    }
 }
 int main(int argc, char *argv[])
 {
