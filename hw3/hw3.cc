@@ -326,9 +326,6 @@ int main(int argc, char *argv[])
              << "Format optional. (DEFAULT: '%n')\n";
         return 1;
     }
-    //if (format.find('%') != string::npos)
-    //{
-    //Do stuff
     struct stat sb;
     for (int i = 2; i < argc; i++)
     {
