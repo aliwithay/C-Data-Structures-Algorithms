@@ -3,10 +3,13 @@
 #include <time.h>
 #include <iostream>
 #include <fstream>
-#include <map>
+#include <string>
+#include <unistd.h>
 #include <pwd.h>
 #include <grp.h>
+#include <getopt.h>
 #include <cstring>
+#include <dirent.h>
 using namespace std;
 string get_file_permissions(struct stat sb)
 {
@@ -166,18 +169,17 @@ char *get_group_name(struct stat sb)
     grp = getgrgid(sb.st_gid);
     return grp->gr_name;
 }
-ifstream read_media_ref()
+ifstream read_media_ref(string ref_path)
 {
-    const string home = getpwnam("cs253")->pw_dir;
-    ifstream ref(home + "/pub/media-types");
+    ifstream ref(ref_path);
     if (!ref)
     {
         const auto saveErr = errno;
-        cerr << "Cannot open media type reference file. " << strerror(saveErr);
+        cerr << "Cannot open media type reference file. " << strerror(saveErr) << ".\n";
     }
     return ref;
 }
-string get_media_type(string path, struct stat sb)
+string get_media_type(string mediaFile, string path, struct stat sb)
 {
     switch (sb.st_mode & S_IFMT)
     {
@@ -200,7 +202,7 @@ string get_media_type(string path, struct stat sb)
         }
         string identifier;
         getline(in, identifier);
-        ifstream ref = read_media_ref();
+        ifstream ref = read_media_ref(mediaFile);
         if (!ref)
         {
             return "";
@@ -255,7 +257,7 @@ string get_media_type(string path, struct stat sb)
         return "Unknown file type.";
     }
 }
-void format_output(string format, char *path, struct stat sb)
+void format_output(string format, string magicNumberFile, string path, struct stat sb)
 {
     for (unsigned int k = 0; k < format.size(); k++)
     {
@@ -295,7 +297,7 @@ void format_output(string format, char *path, struct stat sb)
                 cout << get_change_time(sb);
                 break;
             case 'M':
-                cout << get_media_type(path, sb);
+                cout << get_media_type(magicNumberFile, path, sb);
                 break;
             default:
                 continue;
@@ -308,25 +310,131 @@ void format_output(string format, char *path, struct stat sb)
     }
     cout << "\n";
 }
+void recurse_directory(char *pname, string format, string mediafile, string path)
+{
+    struct stat sb;
+    int result = lstat(path.c_str(), &sb);
+    if (result != 0)
+    {
+        auto saveErr = errno;
+        cerr << pname
+             << " encounterd an error on path " << path << " " << strerror(saveErr) << ".\n";
+        return;
+    }
+    format_output(format, mediafile, path, sb);
+    DIR *dir;
+    dir = opendir(path.c_str());
+    if (dir == NULL)
+    {
+        //cout << "dir = NULL \n";
+        return;
+    }
+    struct dirent *rdir;
+    string d = ".";
+    string dd = "..";
+    while ((rdir = readdir(dir)) != NULL)
+    {
+        if (rdir->d_name == d || rdir->d_name == dd)
+        {
+            continue;
+        }
+        string r = path + "/" + (rdir->d_name);
+        recurse_directory(pname, format, mediafile, r);
+    }
+    closedir(dir);
+    return;
+}
 int main(int argc, char *argv[])
 {
     //Produce usage error if no path provided.
     if (argc == 1)
     {
-        cerr << "Usage: " << argv[0] << " [FORMAT][FILE]...\n"
+        cerr << "Usage: " << argv[0] << "[-a][-f FORMAT][-m MAGIC FILE][PATH(S)]...\n"
              << "List information about the FILEs.\n"
-             << "Format optional. (DEFAULT: '%n')\n";
+             << "Format optional. (DEFAULT: '%p %U %G %s %n')\n";
         return 1;
     }
-    string format = argv[1];
-    if (argc == 2 && format.find('%') != string::npos)
+    int aflag, opt = 0;
+    //string mediafile = getpwnam("cs253")->pw_dir;
+    //mediafile += "/pub/media-types";
+    string mediafile = "/mnt/c/users/alyam/'OneDrive - Colostate'/CS253/hw3/media-types";
+    string format = "%p %U %G %s %n";
+    while ((opt = getopt(argc, argv, "f:m:a")) != -1)
     {
-        cerr << "Usage: " << argv[0] << " [FORMAT][FILE]...\n"
-             << "List information about the FILEs.\n"
-             << "Format optional. (DEFAULT: '%n')\n";
-        return 1;
+        switch (opt)
+        {
+        case 'a':
+            aflag = 1;
+            break;
+        case 'm':
+        {
+            //mflag = 1;
+            mediafile = optarg;
+            ifstream ref(mediafile);
+            if (!ref)
+            {
+                int saveError = errno;
+                cerr << "Cannot open media types file! " << strerror(saveError) << ".\n";
+                ref.close();
+                return 1;
+            }
+            ref.close();
+            break;
+        }
+        case 'f':
+            //fflag = 1;
+            format = optarg;
+            break;
+        default: /* '?' */
+            cerr << "Usage: " << argv[0] << "[-a][-f FORMAT][-m MAGIC FILE][PATH(S)]...\n"
+                 << "List information about the FILEs.\n"
+                 << "Format optional. (DEFAULT: '%p %U %G %s %n')\n";
+            return 1;
+        }
     }
-    struct stat sb;
+    int m = 0;
+    string s;
+    for (int i = 1; i < argc; i++)
+    {
+        s = argv[i];
+        if (s.find('-') != string::npos)
+        {
+            continue;
+        }
+        if (s.find('%') != string::npos)
+        {
+            continue;
+        }
+        if (s.find('-') != string::npos && s.find('m') != string::npos)
+        {
+            m = 1;
+            continue;
+        }
+        if (m == 1)
+        {
+            m = 0;
+            continue;
+        }
+        if (aflag == 1)
+        {
+            cout << "a\n";
+            recurse_directory(argv[0], format, mediafile, s);
+        }
+        else
+        {
+            struct stat sb;
+            int result = lstat(s.c_str(), &sb);
+            if (result != 0)
+            {
+                auto saveErr = errno;
+                cerr << argv[0]
+                     << " encounterd an error on path " << s << " " << strerror(saveErr) << ".\n";
+                return 1;
+            }
+            format_output(format, mediafile, s, sb);
+        }
+    }
+    /*
     for (int i = 2; i < argc; i++)
     {
         char *path = argv[i];
@@ -339,5 +447,6 @@ int main(int argc, char *argv[])
         }
         format_output(format, path, sb);
     }
+    */
     return 0;
 }
