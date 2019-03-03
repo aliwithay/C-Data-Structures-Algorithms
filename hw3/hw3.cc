@@ -201,7 +201,7 @@ string get_media_type(string mediaFile, string path, struct stat sb)
             return "";
         }
         string identifier;
-        getline(in, identifier);
+        in >> identifier;
         ifstream ref = read_media_ref(mediaFile);
         if (!ref)
         {
@@ -310,7 +310,7 @@ void format_output(string format, string magicNumberFile, string path, struct st
     }
     cout << "\n";
 }
-void recurse_directory(char *pname, string format, string mediafile, string path)
+void recurse_directory(char *pname, string format, string mediafile, string path, int a)
 {
     struct stat sb;
     int result = lstat(path.c_str(), &sb);
@@ -318,7 +318,7 @@ void recurse_directory(char *pname, string format, string mediafile, string path
     {
         auto saveErr = errno;
         cerr << pname
-             << " encounterd an error on path " << path << " " << strerror(saveErr) << ".\n";
+             << " encounterd an error on path " << path << ". " << strerror(saveErr) << ".\n";
         return;
     }
     format_output(format, mediafile, path, sb);
@@ -334,12 +334,13 @@ void recurse_directory(char *pname, string format, string mediafile, string path
     string dd = "..";
     while ((rdir = readdir(dir)) != NULL)
     {
-        if (rdir->d_name == d || rdir->d_name == dd)
+        string r = rdir->d_name;
+        if (r == d || r == dd || (a == 0 && r[0] == '.'))
         {
             continue;
         }
-        string r = path + "/" + (rdir->d_name);
-        recurse_directory(pname, format, mediafile, r);
+        r = path + "/" + r;
+        recurse_directory(pname, format, mediafile, r, a);
     }
     closedir(dir);
     return;
@@ -349,15 +350,18 @@ int main(int argc, char *argv[])
     //Produce usage error if no path provided.
     if (argc == 1)
     {
-        cerr << "Usage: " << argv[0] << "[-a][-f FORMAT][-m MAGIC FILE][PATH(S)]...\n"
+        cerr << "Usage: " << argv[0] << "[-a][-f FORMAT][-m MAGIC FILE][PATH(s)]...\n"
              << "List information about the FILEs.\n"
              << "Format optional. (DEFAULT: '%p %U %G %s %n')\n";
         return 1;
     }
-    int aflag, opt = 0;
-    //string mediafile = getpwnam("cs253")->pw_dir;
-    //mediafile += "/pub/media-types";
-    string mediafile = "/mnt/c/users/alyam/'OneDrive - Colostate'/CS253/hw3/media-types";
+    int aflag = 0;
+    int mflag = 0;
+    int fflag = 0;
+    int opt = 0;
+    string mediafile = getpwnam("cs253")->pw_dir;
+    mediafile += "/pub/media-types";
+    //string mediafile = "/mnt/c/users/alyam/'OneDrive - Colostate'/CS253/hw3/media-types";
     string format = "%p %U %G %s %n";
     while ((opt = getopt(argc, argv, "f:m:a")) != -1)
     {
@@ -368,7 +372,14 @@ int main(int argc, char *argv[])
             break;
         case 'm':
         {
-            //mflag = 1;
+            if (mflag == 1)
+            {
+                cerr << "Too many MAGIC FILE specifications. \n" << "Usage: " << argv[0] << " [-a][-f FORMAT][-m MAGIC FILE][PATH(s)]...\n"
+                 << "List information about the FILEs.\n"
+                 << "Format optional. (DEFAULT: '%p %U %G %s %n')\n";
+                 return 1;
+            }
+            mflag = 1;
             mediafile = optarg;
             ifstream ref(mediafile);
             if (!ref)
@@ -382,71 +393,37 @@ int main(int argc, char *argv[])
             break;
         }
         case 'f':
-            //fflag = 1;
+        {
+            if (fflag == 1)
+            {
+                cerr << "Too many FORMAT specifications" << "Usage: " << argv[0] << " [-a][-f FORMAT][-m MAGIC FILE][PATH(s)]...\n"
+                 << "List information about the FILEs.\n"
+                 << "Format optional. (DEFAULT: '%p %U %G %s %n')\n";
+                 return 1;
+            }
+            fflag = 1;
             format = optarg;
             break;
+        }
         default: /* '?' */
-            cerr << "Usage: " << argv[0] << "[-a][-f FORMAT][-m MAGIC FILE][PATH(S)]...\n"
+            cerr << argv[optind] << " is an invalid option.\n" << "Usage: " << argv[0] << " [-a][-f FORMAT][-m MAGIC FILE][PATH(s)]...\n"
                  << "List information about the FILEs.\n"
                  << "Format optional. (DEFAULT: '%p %U %G %s %n')\n";
             return 1;
         }
     }
-    int m = 0;
     string s;
-    for (int i = 1; i < argc; i++)
+    for (int i = optind; i < argc; i++)
     {
         s = argv[i];
-        if (s.find('-') != string::npos)
-        {
-            continue;
-        }
         if (s.find('%') != string::npos)
         {
-            continue;
+            cerr << "Usage: " << argv[0] << " [-a][-f FORMAT][-m MAGIC FILE][PATH(s)]...\n"
+                 << "List information about the FILEs.\n"
+                 << "Format optional. (DEFAULT: '%p %U %G %s %n')\n";
+                 return 1;
         }
-        if (s.find('-') != string::npos && s.find('m') != string::npos)
-        {
-            m = 1;
-            continue;
-        }
-        if (m == 1)
-        {
-            m = 0;
-            continue;
-        }
-        if (aflag == 1)
-        {
-            cout << "a\n";
-            recurse_directory(argv[0], format, mediafile, s);
-        }
-        else
-        {
-            struct stat sb;
-            int result = lstat(s.c_str(), &sb);
-            if (result != 0)
-            {
-                auto saveErr = errno;
-                cerr << argv[0]
-                     << " encounterd an error on path " << s << " " << strerror(saveErr) << ".\n";
-                return 1;
-            }
-            format_output(format, mediafile, s, sb);
-        }
+        recurse_directory(argv[0], format, mediafile, s, aflag);
     }
-    /*
-    for (int i = 2; i < argc; i++)
-    {
-        char *path = argv[i];
-        int result = lstat(path, &sb);
-        if (result != 0)
-        {
-            auto saveErr = errno;
-            cerr << argv[0] << " encounterd an error on path " << argv[i] << " " << strerror(saveErr) << ".\n";
-            continue;
-        }
-        format_output(format, path, sb);
-    }
-    */
     return 0;
 }
