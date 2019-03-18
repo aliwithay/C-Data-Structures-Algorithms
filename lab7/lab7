@@ -1,0 +1,8 @@
+exp1: delete not called.
+exp2: array declared but not deleted. Also tries to access index out of bounds.
+exp3: compare perfomed on uninitialized variable, x.
+exp4: compare performed on uninitialized variable y passed as x.
+exp7: incorrect delete. Use delete [] instead of just delete.
+exp9: pointer deletes from index 3. Memory at index 0, 1 and 2 is not freed.
+exp10: Negative difference causes incorrect answer due to unsigned type.
+
