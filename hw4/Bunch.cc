@@ -3,7 +3,7 @@ using namespace std;
 Bunch::Bunch()
 {
     m = getpwnam("cs253")->pw_dir;
-    m += "/bin/media-types";
+    m += "/pub/media-types";
     f = "%p %U %G %s %n";
     a = 0;
     p = "";
@@ -14,7 +14,7 @@ Bunch::Bunch(const string path, const string magic, const string format, const b
     if (magic == "")
     {
         m = getpwnam("cs253")->pw_dir;
-        m += "/bin/media-types";
+        m += "/pub/media-types";
     }
     else
     {
@@ -305,8 +305,9 @@ string Bunch::get_media_type(string mediaFile, string path, struct stat sb)
             err += "\n";
             throw err;
         }
-        string identifier;
-        in >> identifier;
+        char iden[32];
+        in.read(iden, 32);
+        string identifier = iden;
         ifstream ref = read_media_ref(mediaFile);
         string s;
         int flag = 0;
