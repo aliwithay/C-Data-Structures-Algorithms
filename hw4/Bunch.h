@@ -36,7 +36,6 @@ private:
 public:
   Bunch();
   Bunch(const std::string path, const std::string magic = "", const std::string format = "%p %U %G %s %n", const bool all = false);
-  ~Bunch();
   Bunch(const Bunch &old);
   Bunch operator=(const Bunch &old);
   void path(const std::string path);

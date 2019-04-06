@@ -15,7 +15,7 @@ export opts=-D_FORTIFY_SOURCE=2 -fno-diagnostics-show-option		\
     -Werror -Wextra -Wfatal-errors -Winit-self -Wlogical-op		\
     -Wold-style-cast -Wpedantic -Wshadow -Wunused-const-variable=1	\
     -Wzero-as-null-pointer-constant
-CXXFLAGS=-Wall $$opts
+CXXFLAGS=-Wall -g $$opts
 # Use CXXFLAGS; not CPPFLAGS.  CXX is for C++, CPP is for the C Pre-Processor.
 
 assignment=hw4

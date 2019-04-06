@@ -33,10 +33,6 @@ Bunch::Bunch(const string path, const string magic, const string format, const b
     files.clear();
     recurse_directory(f, m, p, a);
 }
-Bunch::~Bunch()
-{
-    files.clear();
-}
 Bunch::Bunch(const Bunch &old)
 {
     for (size_t i = 0; i < old.size(); i++)
