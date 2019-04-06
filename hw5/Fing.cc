@@ -2,7 +2,7 @@
 using namespace std;
 Fing::Fing()
 {
-    throw "something";
+    throw "No path provided for Fing. Exiting.";
 }
 Fing::Fing(std::string path)
 {

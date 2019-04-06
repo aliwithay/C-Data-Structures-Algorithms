@@ -2,7 +2,7 @@
 using namespace std;
 Bunch::Bunch()
 {
-    throw "something bunch";
+    throw "No path provided for Bunch. Exiting.";
 }
 Bunch::Bunch(const string path, const bool all)
 {
@@ -15,7 +15,6 @@ Bunch::Bunch(const string path, const bool all)
         a = 0;
     }
     p = path;
-    files.clear();
     recurse_directory(p, a);
 }
 Bunch::~Bunch()

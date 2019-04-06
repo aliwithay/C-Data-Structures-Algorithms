@@ -13,13 +13,10 @@ int main()
 	// Yeah, this code is arguably a bit const-happy.
 	try
 	{
-		/*
-		const auto home = getpwnam("cs253")->pw_dir; // cs253’s home dir
+		const auto home = getpwnam("aliwithy")->pw_dir; // cs253’s home dir
 		if (chdir(home) != 0)						 // go to ~cs253
 			throw "Can’t chdir to "s + home;
-		const Bunch b("pub/tree"); // relative path from here
-		*/
-		const Bunch b("/mnt/c/users/alyam/Documents/CS370", true);
+		const Bunch b("test", true); // relative path from here
 		for (size_t i = 0; i < b.size(); i++)
 		{
 			const auto e = b.entry(i);			 // a Fing
