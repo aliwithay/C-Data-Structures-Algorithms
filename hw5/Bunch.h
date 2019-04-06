@@ -29,7 +29,7 @@ class Fing
 {
 public:
   Fing();
-  Fing(std::string path);
+  Fing(const std::string &path);
   Fing(const Fing &old);
   Fing operator=(const Fing &old);
   ~Fing();
@@ -56,12 +56,12 @@ private:
 
 public:
   Bunch();
-  Bunch(const std::string path, const bool all = false);
+  Bunch(const std::string &path, const bool &all = false);
   ~Bunch();
   Bunch(const Bunch &old);
   Bunch operator=(const Bunch &old);
-  void path(const std::string path);
-  void all(const bool all);
+  void path(const std::string &path);
+  void all(const bool &all);
   size_t size() const;
   bool empty() const;
   Fing entry(size_t n) const;

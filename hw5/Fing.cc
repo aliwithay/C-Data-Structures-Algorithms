@@ -4,7 +4,7 @@ Fing::Fing()
 {
     throw "No path provided for Fing. Exiting.";
 }
-Fing::Fing(std::string path)
+Fing::Fing(const std::string &path)
 {
     p = path;
     int result = lstat(path.c_str(), &sb);

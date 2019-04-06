@@ -4,7 +4,7 @@ Bunch::Bunch()
 {
     throw "No path provided for Bunch. Exiting.";
 }
-Bunch::Bunch(const string path, const bool all)
+Bunch::Bunch(const string &path, const bool &all)
 {
     if (all)
     {
@@ -34,13 +34,13 @@ Bunch Bunch::operator=(const Bunch &old)
     Bunch newBunch(old);
     return newBunch;
 }
-void Bunch::path(const string path)
+void Bunch::path(const string &path)
 {
     p = path;
     files.clear();
     recurse_directory(p, a);
 }
-void Bunch::all(const bool all)
+void Bunch::all(const bool &all)
 {
     if (all == true)
     {
