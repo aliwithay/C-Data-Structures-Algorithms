@@ -65,10 +65,9 @@ const Fing *Bunch::entry(size_t n) const
 }
 bool Bunch::operator==(const Bunch &obunch) const
 {
-    bool match = false;
     for (Fing f : files)
     {
-        match = false;
+        bool match = false;
         for (Fing g : obunch.files)
         {
             if (f == g)
@@ -78,17 +77,16 @@ bool Bunch::operator==(const Bunch &obunch) const
         }
         if (!match)
         {
-            break;
+            return false;
         }
     }
-    return match;
+    return true;
 }
 bool Bunch::operator!=(const Bunch &obunch) const
 {
-    bool match = false;
     for (Fing f : files)
     {
-        match = false;
+        bool match = false;
         for (Fing g : obunch.files)
         {
             if (f == g)
@@ -98,10 +96,10 @@ bool Bunch::operator!=(const Bunch &obunch) const
         }
         if (!match)
         {
-            break;
+            return true;
         }
     }
-    return !match;
+    return false;
 }
 Bunch Bunch::operator+(const Bunch &obunch) const
 {
