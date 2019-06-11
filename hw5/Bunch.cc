@@ -31,8 +31,14 @@ Bunch::Bunch(const Bunch &old)
 }
 Bunch Bunch::operator=(const Bunch &old)
 {
-    Bunch newBunch(old);
-    return newBunch;
+    files.clear();
+    for (size_t i = 0; i < old.size(); i++)
+    {
+        files.push_back(old.entry(i));
+    }
+    p = old.p;
+    a = old.a;
+    return *this;
 }
 void Bunch::path(const string &path)
 {

@@ -3,6 +3,7 @@ using namespace std;
 Bunch::Bunch()
 {
     throw "No path provided for Bunch. Exiting."s;
+    return;
 }
 Bunch::Bunch(const string &path)
 {
@@ -12,6 +13,7 @@ Bunch::Bunch(const string &path)
 }
 Bunch::~Bunch()
 {
+    
 }
 Bunch::Bunch(const Bunch &old)
 {
@@ -61,7 +63,7 @@ const Fing *Bunch::entry(size_t n) const
         err += to_string(files.size() - 1);
         throw err;
     }
-    return files[n];
+    return files[n].get();
 }
 bool Bunch::operator==(const Bunch &obunch) const
 {
@@ -69,12 +71,14 @@ bool Bunch::operator==(const Bunch &obunch) const
     {
         return false;
     }
-    for (auto f : files)
+    for (uint i = 0; i < files.size(); i++)
     {
+        auto f = files[i].get();
         bool match = false;
-        for (auto g : obunch.files)
+        for (uint j = 0; j < obunch.files.size(); j++)
         {
-            if (f == g)
+            auto g = obunch.files[j].get();
+            if (*f == *g)
             {
                 match = true;
             }
@@ -92,12 +96,14 @@ bool Bunch::operator!=(const Bunch &obunch) const
     {
         return true;
     }
-    for (auto f : files)
+    for (uint i = 0; i < files.size(); i++)
     {
+        auto f = files[i].get();
         bool match = false;
-        for (auto g : obunch.files)
+        for (uint j = 0; j < obunch.files.size(); j++)
         {
-            if (f == g)
+            auto g = obunch.files[j].get();
+            if (*f == *g)
             {
                 match = true;
             }
@@ -112,12 +118,14 @@ bool Bunch::operator!=(const Bunch &obunch) const
 Bunch Bunch::operator+(const Bunch &obunch) const
 {
     Bunch b(p);
-    for (auto f : obunch.files)
+    for (uint i = 0; i < obunch.files.size(); i++)
     {
+        auto f = obunch.files[i];
         bool match = false;
-        for (auto g : b.files)
+        for (uint j = 0; j < b.files.size(); j++)
         {
-            if (f == g)
+            auto g = b.files[j];
+            if (*(f.get()) == *(g.get()))
             {
                 match = true;
             }
@@ -133,12 +141,14 @@ Bunch Bunch::operator-(const Bunch &obunch) const
 {
     Bunch b(p);
     b.files.clear();
-    for (auto f : files)
+    for (uint i = 0; i < files.size(); i++)
     {
+        auto f = files[i];
         bool match = false;
-        for (auto g : obunch.files)
+        for (uint j = 0; j < obunch.files.size(); j++)
         {
-            if (f == g)
+            auto g = obunch.files[j];
+            if (*f.get() == *g.get())
             {
                 match = true;
             }
@@ -152,12 +162,14 @@ Bunch Bunch::operator-(const Bunch &obunch) const
 }
 Bunch Bunch::operator+=(const Bunch &obunch)
 {
-    for (auto f : obunch.files)
+    for (uint i = 0; i < obunch.files.size(); i++)
     {
+        auto f = obunch.files[i];
         bool match = false;
-        for (auto g : files)
+        for (uint j = 0; j < files.size(); j++)
         {
-            if (f == g)
+            auto g = files[j];
+            if (*(f.get()) == *(g.get()))
             {
                 match = true;
             }
@@ -173,10 +185,12 @@ Bunch Bunch::operator-=(const Bunch &obunch)
 {
     for (uint i = 0; i < files.size(); i++)
     {
+        auto f = files[i].get();
         bool match = false;
-        for (auto g : obunch.files)
+        for (uint j = 0; j < obunch.files.size(); j++)
         {
-            if (files[i] == g)
+            auto g = obunch.files[j].get();
+            if (*f == *g)
             {
                 match = true;
             }
@@ -207,42 +221,35 @@ Bunch::iterator Bunch::end() const
 void Bunch::recurse_directory(string path, int aflag)
 {
     //string s = format_output(format, mediafile, path, sb);
-    DIR *dir;
-    dir = opendir(path.c_str());
-    if (dir == NULL)
+    //Check for symlink or reglar
+    struct stat sb;
+    int result = lstat(path.c_str(), &sb);
+    if (result != 0)
     {
-        //Check for symlink or reglar
-        struct stat sb;
-        int result = lstat(path.c_str(), &sb);
-        if (result != 0)
-        {
-            auto saveErr = errno;
-            string err = "Could not open " + path + ". " + strerror(saveErr);
-            throw err;
-            return;
-        }
-        switch (sb.st_mode & S_IFMT)
-        {
+        auto saveErr = errno;
+        string err = "Could not open " + path + ". " + strerror(saveErr);
+        throw err;
+    }
+    switch (sb.st_mode & S_IFMT)
+    {
         case S_IFDIR:
         {
-            Directory d(path);
-            files.push_back(&d);
+            files.push_back(shared_ptr<Directory> (new Directory(path)));
             break;
         }
         case S_IFLNK:
         {
-            Symlink s(path);
-            files.push_back(&s);
+            files.push_back(shared_ptr<Symlink> (new Symlink(path)));
             return;
         }
         case S_IFREG:
         {
-            Regular r(path);
-            files.push_back(&r);
+            files.push_back(shared_ptr<Regular> (new Regular(path)));
             return;
         }
-        }
     }
+    DIR *dir;
+    dir = opendir(path.c_str());
     struct dirent *rdir;
     string d = ".";
     string dd = "..";

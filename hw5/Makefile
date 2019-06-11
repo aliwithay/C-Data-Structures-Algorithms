@@ -32,7 +32,7 @@ Fing.o: Fing.cc
 	g++ $(CXXFLAGS) -c Fing.cc
 
 tar:
-	tar -cv $(MAKEFILE_LIST) Bunch.cc $(wildcard *.h) >$(assignment).tar
+	tar -cv $(MAKEFILE_LIST) Bunch.cc Fing.cc $(wildcard *.h) >$(assignment).tar
 
 clean:
 	rm -f $(assignment) $(assignment).tar *.o *.gch *.gcov a.out *.a

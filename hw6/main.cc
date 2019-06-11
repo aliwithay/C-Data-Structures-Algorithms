@@ -25,17 +25,11 @@ int main()
 {
 	try
 	{
-		/*
 		const auto home = getpwnam("cs253")->pw_dir; // cs253’s home dir
 		if (chdir(home) != 0)						 // go to ~cs253
 			throw "Can’t chdir to "s + home;
 		const Bunch b1("pub/tree/alpha/iota");
 		Bunch b2("pub/tree2/tau");
-		dump("b1", b1);
-		b2 += Bunch("/etc/group");
-		*/
-		const Bunch b1("/mnt/c/users/alyam/Documents/CS370");
-		Bunch b2("/mnt/c/users/alyam/Documents/DCP");
 		dump("b1", b1);
 		b2 += Bunch("/etc/group");
 		dump("b2", b2);
@@ -45,7 +39,11 @@ int main()
 		b3 += b1;						 // Yes, I did it twice.
 		b3 -= Bunch("/etc/resolv.conf"); // Should have no effect
 		dump("b3", b3);
-		assert(b1.size() == 3);
+		if ((b1 + b2) == b3) {
+			cout << "true\n";
+		} else {
+			cout << "false\n";
+		}		assert(b1.size() == 3);
 		assert(b2.size() == 3);
 		assert((b1 + b2).size() == 6);
 		assert(b1 + b2 == b3);

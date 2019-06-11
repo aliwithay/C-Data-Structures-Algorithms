@@ -23,11 +23,13 @@ Fing::Fing(const Fing &old)
 }
 Fing Fing::operator=(const Fing &old)
 {
-    Fing newFing(old);
-    return newFing;
+    p = old.p;
+    sb = old.sb;
+    return *this;
 }
 Fing::~Fing()
 {
+    //cout << "~Fing \n";
 }
 string Fing::path() const
 {

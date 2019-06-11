@@ -61,7 +61,7 @@ public:
   Bunch(const Bunch &old);
   Bunch operator=(const Bunch &old);
   void path(const std::string &path);
-  void all(const bool &all);
+  void all(const bool &all = true);
   size_t size() const;
   bool empty() const;
   Fing entry(size_t n) const;

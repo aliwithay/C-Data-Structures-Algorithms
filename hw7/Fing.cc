@@ -80,7 +80,7 @@ Dual Fing::perms() const
         break;
     case 1:
         permissions += "--x";
-        break;
+        break;cout << type << "\n";
     case 0:
         permissions += "---";
         break;

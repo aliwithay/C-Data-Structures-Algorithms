@@ -41,7 +41,7 @@ Directory.o: Directory.cc
 	g++ $(CXXFLAGS) -c Directory.cc
 
 tar:
-	tar -cv $(MAKEFILE_LIST) Bunch.cc $(wildcard *.h) >$(assignment).tar
+	tar -cv $(MAKEFILE_LIST) *.cc $(wildcard *.h) >$(assignment).tar
 
 clean:
 	rm -f $(assignment) $(assignment).tar *.o *.gch *.gcov a.out *.a
